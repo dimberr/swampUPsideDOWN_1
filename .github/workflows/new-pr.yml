@@ -22,6 +22,9 @@ jobs:
         PW: ${{ secrets.USER_CRED }}
       run: |
         echo "Login health check"
+        echo "API_URL: $URL"
+        echo "USER: $USER"
+        echo "PW: $PW"
         curl --connect-timeout 2 -sSf -k -u "$USER:$PW" $URL/login
         
     - name: send_run_log
@@ -31,6 +34,10 @@ jobs:
         USER: ${{ secrets.USER }}
         PW: ${{ secrets.USER_CRED }}
       run: |
+        echo "Login health check"
+        echo "API_URL: $URL"
+        echo "USER: $USER"
+        echo "PW: $PW"
         echo "Send run log"
         curl --connect-timeout 2 -sSf -k -u "$USER:$PW" $URL/api/run/audit
         
@@ -40,6 +47,8 @@ jobs:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
+        echo "SLACK_WEBHOOK_URL: $SLACK_WEBHOOK_URL"
+        echo "PR_TITLE: $PR_TITLE"
         echo "Sending Slack notification..."
         curl --connect-timeout 2 -sSf -k -X POST -H 'Content-type: application/json' --data '{"text": "'"$PR_TITLE"'"}' $SLACK_WEBHOOK_URL
 
@@ -50,8 +59,11 @@ jobs:
         USER: ${{ secrets.USER }}
         PW: ${{ secrets.USER_CRED }}
       run: |
+        set -x
         PR="${{ github.event.pull_request.body }}"
-        echo $PR | grep -oP '\(backport #\K\d+' | tail -n 1)
+        echo $PR | grep -oP '\(backport #\K\d+' | tail -n 1
+        PR_NUMBER="${{ github.event.pull_request.number }}"
+        REPO="${{ github.event.repository.full_name }}"
         author=$(gh pr view ${ORI_PR} -R ${REPO} --json author -q '.author.login')
         if [[ ! "${author}" =~ "mergify" ]]; then
           gh pr edit ${PR_NUMBER} -R ${REPO} --add-assignee ${author} || true
